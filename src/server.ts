@@ -1,6 +1,7 @@
 import http, { IncomingMessage, Server, ServerResponse } from "http";
 import path from "path";
 import config from "./config";
+import { json } from "stream/consumers";
 
 const server: Server = http.createServer(
   (req: IncomingMessage, res: ServerResponse) => {
@@ -28,12 +29,29 @@ const server: Server = http.createServer(
     }
 
     if (req.url === "/api/users" && req.method === "POST") {
-      const user = {
-        id: 1,
-        name: "alice",
-      };
-      res.writeHead(200, { "content-type": "application/json" });
-      res.end(JSON.stringify(user));
+      // const user = {
+      //   id: 1,
+      //   name: "alice",
+      // };
+      // res.writeHead(200, { "content-type": "application/json" });
+      // res.end(JSON.stringify(user));
+
+      let body = "";
+
+      //listen for data chunk
+      req.on("data", (chunk) => {
+        body += chunk.toString();
+      });
+      req.on("end", () => {
+        try {
+          const parseBody = JSON.parse(body);
+          console.log(parseBody);
+          console.log("Catching current changes")
+          res.end(JSON.stringify(parseBody));
+        } catch (error: any) {
+          console.log(error?.message);
+        }
+      });
     }
   }
 );
